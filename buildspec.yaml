@@ -1,18 +1,21 @@
-version: 0.2
 
+version: 0.2
 phases:
   install:
     commands:
-      - echo Installing NGINX
-      - sudo apt-get update
-      - sudo apt-get install nginx -y
+      - echo "Installing dependencies"
+      - dotnet restore
   build:
     commands:
-      - echo Build started on `date`
-      - cp index.html /var/www/html/
+      - echo "Building application"
+      - dotnet build --configuration Release
+      - dotnet test --logger trx
   post_build:
     commands:
-      - echo Configuring NGINX
+      - echo "Running SonarCloud Analysis"
+      - dotnet sonarscanner begin /k:"your_project_key" /o:"your_org" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="your_sonar_token"
+      - dotnet build
+      - dotnet sonarscanner end /d:sonar.login="your_sonar_token"
 artifacts:
   files:
-    - /var/www/html/index.html
+    - '**/*'
